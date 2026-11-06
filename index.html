@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Game of Life – Regel-Labor</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1>Game of Life <span>– Regel-Labor</span></h1>
+    <button id="hilfe-knopf" class="rund" title="Hilfe">?</button>
+  </header>
+
+  <main>
+    <!-- Linke Seite: Grid -->
+    <section class="spalte links">
+      <div id="grid-rahmen">
+        <canvas id="grid"></canvas>
+      </div>
+      <div id="zell-info">Fahre mit der Maus über eine Zelle.</div>
+
+      <div class="steuerung">
+        <button id="start" class="haupt" disabled>▶ Start</button>
+        <button id="zurueck" title="Einen Schritt zurück">⏮</button>
+        <button id="schritt" title="Einen Schritt weiter" disabled>⏭ Schritt</button>
+        <button id="reset" title="Zurück zum Startzustand (Generation 0)">⟲ Reset</button>
+        <button id="leeren">Leeren</button>
+        <button id="zufall">Zufall</button>
+      </div>
+
+      <div class="steuerung optionen">
+        <label>Tempo
+          <input id="tempo" type="range" min="1" max="30" value="5">
+        </label>
+        <label>Muster
+          <select id="muster">
+            <option value="">– einfügen –</option>
+          </select>
+        </label>
+        <label>Größe
+          <select id="groesse">
+            <option value="klein">30 × 20</option>
+            <option value="mittel" selected>50 × 30</option>
+            <option value="gross">80 × 50</option>
+          </select>
+        </label>
+        <label>Rand
+          <select id="rand">
+            <option value="tot">tot</option>
+            <option value="torus">umlaufend</option>
+          </select>
+        </label>
+        <label class="haken"><input id="zahlen" type="checkbox"> Nachbarzahlen</label>
+      </div>
+
+      <div class="zaehler">
+        Generation: <b id="generation">0</b>
+        <span class="trenner">·</span>
+        Lebend: <b id="lebend">0</b>
+      </div>
+    </section>
+
+    <!-- Rechte Seite: Code -->
+    <section class="spalte rechts">
+      <div class="kopfzeile">
+        <h2>Deine Regel (Python)</h2>
+        <div class="datei">
+          <button id="oeffnen" title="regel.py öffnen">Öffnen</button>
+          <button id="speichern" title="regel.py herunterladen">Speichern</button>
+          <input id="datei-eingabe" type="file" accept=".py,.txt" hidden>
+        </div>
+      </div>
+      <div id="editor"></div>
+      <div class="uebernehmen-zeile">
+        <button id="uebernehmen" class="haupt" disabled>▶ Regel übernehmen</button>
+        <span class="tipp">oder Strg + Enter</span>
+      </div>
+
+      <div id="tabelle-bereich">
+        <h3>Deine Regel auf einen Blick</h3>
+        <table id="tabelle">
+          <thead>
+            <tr><th>Nachbarn</th><th>0</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th><th>8</th></tr>
+          </thead>
+          <tbody>
+            <tr data-lebendig="0"><th>tote Zelle</th></tr>
+            <tr data-lebendig="1"><th>lebende Zelle</th></tr>
+          </tbody>
+        </table>
+        <p class="legende"><span class="kasten an"></span> lebt in der nächsten Generation <span class="kasten aus"></span> ist tot</p>
+      </div>
+
+      <h3>Ausgabe</h3>
+      <div id="konsole" aria-live="polite"></div>
+    </section>
+  </main>
+
+  <dialog id="hilfe">
+    <h2>Hilfe</h2>
+    <h3>Die Funktion <code>regel</code></h3>
+    <p>Du schreibst in Python die Funktion <code>regel</code>. Sie entscheidet für <b>eine einzelne Zelle</b>,
+      ob diese in der nächsten Generation lebt. Das Programm ruft sie für jede Zelle im Grid auf.</p>
+<pre>def regel(lebendig, nachbarn):
+    ...
+    return True   # Zelle lebt
+    return False  # Zelle ist tot</pre>
+    <ul>
+      <li><code>lebendig</code> ist <code>True</code>, wenn die Zelle gerade lebt, sonst <code>False</code>.</li>
+      <li><code>nachbarn</code> ist die Anzahl der lebenden Nachbarzellen – eine Zahl von 0 bis 8.
+        Das Zählen übernimmt das Programm für dich.</li>
+    </ul>
+    <p>Mit <b>Regel übernehmen</b> (oder <kbd>Strg</kbd> + <kbd>Enter</kbd>) wird deine Regel geprüft und aktiviert.
+      Die Tabelle zeigt dir dann für jede mögliche Situation, was deine Regel entscheidet.
+      Mit <code>print(...)</code> kannst du dir Werte in der Ausgabe anzeigen lassen.</p>
+
+    <h3>Das Grid</h3>
+    <ul>
+      <li>Klicke auf Zellen, um sie lebendig oder tot zu machen. Du kannst auch mit gedrückter Maustaste zeichnen.</li>
+      <li><b>Schritt</b> berechnet genau eine neue Generation, <b>⏮</b> geht einen Schritt zurück.</li>
+      <li><b>Reset</b> stellt den Zustand von Generation 0 wieder her.</li>
+      <li><b>Nachbarzahlen</b> zeigt in jeder Zelle, wie viele lebende Nachbarn sie hat.</li>
+      <li><b>Rand: umlaufend</b> verbindet die Ränder: Wer rechts hinausläuft, kommt links wieder herein.</li>
+    </ul>
+    <p>Dein Code wird automatisch im Browser gespeichert. Mit <b>Speichern</b> lädst du ihn als Datei herunter.</p>
+    <form method="dialog"><button class="haupt">Schließen</button></form>
+  </dialog>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/python/python.min.js"></script>
+  <script src="muster.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
